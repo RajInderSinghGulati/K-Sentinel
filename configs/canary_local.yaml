@@ -1,0 +1,13 @@
+# K-Sentinel Canary Configuration (Local Test / macOS / Non-root)
+# ─────────────────────────────────────────────────────────────
+target_dirs:
+  - /tmp/ksentinel_canaries
+
+max_depth: 2
+min_honeyfiles: 5
+max_honeyfiles: 15
+
+state_file: /tmp/ksentinel_canaries/canary_state.json
+honeyfile_list: /tmp/ksentinel_canaries/honeyfiles.txt
+
+rotation_hours: 24

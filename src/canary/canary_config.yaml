@@ -1,0 +1,30 @@
+# K-Sentinel Canary File Manager Configuration
+# ──────────────────────────────────────────────
+# This file configures the honeyfile deployment strategy.
+# Honeyfiles are decoy files placed in directories to detect
+# unauthorized file access (a key ransomware indicator).
+
+# Directories to deploy honeyfiles into.
+# The manager will recurse into subdirectories up to max_depth.
+target_dirs:
+  - /home
+  - /tmp
+  - /var/tmp
+  - /opt
+  - /srv
+
+# Maximum recursion depth for subdirectory scanning
+max_depth: 2
+
+# Number of honeyfiles to deploy
+min_honeyfiles: 10
+max_honeyfiles: 50
+
+# State tracking file (records deployed honeyfiles and their hashes)
+state_file: /etc/ksentinel/canary_state.json
+
+# Output file consumed by the eBPF agent (one path per line)
+honeyfile_list: /etc/ksentinel/honeyfiles.txt
+
+# How often to rotate honeyfiles (in hours)
+rotation_hours: 24

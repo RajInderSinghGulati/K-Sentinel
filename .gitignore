@@ -1,0 +1,33 @@
+# Build artifacts
+build/
+src/bpf/vmlinux.h
+*.o
+*.skel.h
+*.dSYM/
+
+# Python
+venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# OS / editor
+.DS_Store
+.vscode/
+.idea/
+
+# Runtime logs and temp data
+*.log
+/tmp/
+
+# Documentation and presentation files
+docs/
+*.pdf
+*.pptx
+*.ppt
+*.docx
+*.doc
+generate_pptx.py
+generate_visual_pptx.py
+generate_report.py
+ppt_assets/

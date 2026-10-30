@@ -1,0 +1,83 @@
+# K-Sentinel Agent Runtime Configuration
+# ═══════════════════════════════════════
+# This file configures the K-Sentinel agent's runtime behavior.
+# It is loaded by the agent at startup.
+
+# ── Agent Identity ────────────────────────────────────────────
+agent:
+  name: "K-Sentinel"
+  version: "0.1.0"
+  instance_id: "ksentinel-dev-01"
+
+# ── Honeyfile Configuration ──────────────────────────────────
+honeyfiles:
+  # Path to the honeyfile list (one path per line)
+  list_path: /etc/ksentinel/honeyfiles.txt
+
+  # Auto-deploy honeyfiles on agent startup
+  auto_deploy: true
+
+  # Path to the canary manager configuration
+  canary_config: /etc/ksentinel/canary_config.yaml
+
+# ── Detection Engine ─────────────────────────────────────────
+detection:
+  # Scoring weights (must sum to 1.0)
+  weights:
+    honeyfile: 0.40
+    frequency: 0.25
+    entropy:   0.20
+    rename:    0.10
+    delete:    0.05
+
+  # Thresholds
+  entropy_threshold: 7.5    # Shannon entropy (0-8 scale)
+  frequency_threshold: 50    # Max ops per PID per window
+  frequency_window_sec: 5    # Sliding window duration
+
+  # Severity score thresholds
+  score_medium:   0.3
+  score_high:     0.6
+  score_critical: 0.8
+
+# ── Response Engine ──────────────────────────────────────────
+response:
+  # Enable autonomous process killing
+  auto_kill: true
+
+  # Minimum severity to trigger SIGKILL
+  min_kill_severity: HIGH
+
+  # Dry-run mode (log actions without killing)
+  dry_run: false
+
+  # Process whitelist (PIDs that should never be killed)
+  whitelist_pids: [1, 2]
+
+# ── Logging ──────────────────────────────────────────────────
+logging:
+  # Alert log (JSON format)
+  alert_log: /var/log/ksentinel/alerts.json
+
+  # Incident log (detailed forensic records)
+  incident_log: /var/log/ksentinel/incidents.json
+
+  # Console verbosity
+  verbose: true
+
+  # Minimum severity to log to file
+  min_log_severity: LOW
+
+  # Minimum severity to print to console
+  min_console_severity: INFO
+
+# ── Dashboard ────────────────────────────────────────────────
+dashboard:
+  # Enable dashboard event push
+  enabled: false
+
+  # Dashboard endpoint (HTTP or Unix socket)
+  endpoint: "http://localhost:8080/api/events"
+
+  # Push interval (milliseconds)
+  push_interval_ms: 500

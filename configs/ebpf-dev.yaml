@@ -1,0 +1,125 @@
+# ══════════════════════════════════════════════════════════════════════════════
+# K-Sentinel — Lima VM Configuration for eBPF Development
+# ebpf-dev.yaml
+#
+# This configuration creates a lightweight Ubuntu 24.04 LTS virtual machine
+# with all necessary tools for eBPF development, compilation, and testing.
+#
+# Usage:
+#   limactl start configs/ebpf-dev.yaml
+#   limactl shell ebpf-dev
+# ══════════════════════════════════════════════════════════════════════════════
+
+# VM instance name
+# vmType: qemu
+
+# ── Base Image ────────────────────────────────────────────────────────────────
+# Ubuntu 24.04 LTS provides kernel 6.8+ with full BTF support,
+# which is essential for BPF CO-RE (Compile Once, Run Everywhere).
+images:
+  # ARM64 (Apple Silicon - M1/M2/M3/M4)
+  - location: "https://cloud-images.ubuntu.com/releases/24.04/release/ubuntu-24.04-server-cloudimg-arm64.img"
+    arch: "aarch64"
+  # x86_64 (Intel Macs)
+  - location: "https://cloud-images.ubuntu.com/releases/24.04/release/ubuntu-24.04-server-cloudimg-amd64.img"
+    arch: "x86_64"
+
+# ── Resource Allocation ──────────────────────────────────────────────────────
+cpus: 4
+memory: "4GiB"
+disk: "20GiB"
+
+# ── Mount Configuration ──────────────────────────────────────────────────────
+# Mount the project directory from the host (macOS) into the VM.
+# This allows editing files on macOS and compiling them in the VM.
+mounts:
+  - location: "~"
+    writable: true
+
+# ── Provisioning Script ──────────────────────────────────────────────────────
+# Automatically install all eBPF development dependencies on first boot.
+provision:
+  - mode: system
+    script: |
+      #!/bin/bash
+      set -eux -o pipefail
+
+      echo "═══════════════════════════════════════════════════════"
+      echo "  K-Sentinel — Provisioning eBPF Development Environment"
+      echo "═══════════════════════════════════════════════════════"
+
+      # Update package lists
+      apt-get update
+
+      # ── Core Build Tools ──────────────────────────────────────
+      apt-get install -y \
+        build-essential \
+        make \
+        pkg-config \
+        gcc \
+        g++
+
+      # ── LLVM/Clang (eBPF compiler) ───────────────────────────
+      apt-get install -y \
+        clang \
+        llvm \
+        llvm-dev
+
+      # ── eBPF Libraries & Tools ───────────────────────────────
+      apt-get install -y \
+        libbpf-dev \
+        libelf-dev \
+        libpcap-dev \
+        zlib1g-dev \
+        linux-tools-common \
+        linux-tools-$(uname -r) || true \
+        bpfcc-tools \
+        bpftrace
+
+      # ── Python (for canary manager & testing) ─────────────────
+      apt-get install -y \
+        python3 \
+        python3-pip \
+        python3-venv \
+        python3-pytest
+
+      # ── Additional Tools ──────────────────────────────────────
+      apt-get install -y \
+        git \
+        curl \
+        jq \
+        strace \
+        htop \
+        tree
+
+      # ── Generate vmlinux.h ────────────────────────────────────
+      # This header provides kernel type definitions for CO-RE.
+      if command -v bpftool &> /dev/null; then
+        echo "Generating vmlinux.h..."
+        bpftool btf dump file /sys/kernel/btf/vmlinux format c > /tmp/vmlinux.h
+        echo "vmlinux.h generated at /tmp/vmlinux.h"
+        echo "Copy to your project: cp /tmp/vmlinux.h ~/Downloads/Cybersec_Proj/K-Sentinel/src/bpf/"
+      else
+        echo "WARNING: bpftool not available, vmlinux.h generation skipped"
+        echo "Install linux-tools-$(uname -r) manually after boot"
+      fi
+
+      # ── Create K-Sentinel directories ─────────────────────────
+      mkdir -p /var/log/ksentinel
+      mkdir -p /etc/ksentinel
+
+      # ── Verify Setup ──────────────────────────────────────────
+      echo ""
+      echo "═══════════════════════════════════════════════════════"
+      echo "  Provisioning Complete!"
+      echo "═══════════════════════════════════════════════════════"
+      echo "  Kernel: $(uname -r)"
+      echo "  Clang:  $(clang --version | head -1)"
+      echo "  libbpf: $(pkg-config --modversion libbpf 2>/dev/null || echo 'not found')"
+      echo "  BTF:    $(ls /sys/kernel/btf/vmlinux 2>/dev/null && echo 'available' || echo 'not available')"
+      echo ""
+      echo "  Next steps:"
+      echo "    cd ~/Downloads/Cybersec_Proj/K-Sentinel"
+      echo "    make vmlinux   # Generate vmlinux.h"
+      echo "    make all       # Build everything"
+      echo "═══════════════════════════════════════════════════════"
